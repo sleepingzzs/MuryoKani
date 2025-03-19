@@ -9,15 +9,16 @@
 		"userInterfaceStyle": "automatic",
 		"newArchEnabled": true,
 		"ios": {
-			"supportsTablet": true
+			"supportsTablet": true,
+			"bundleIdentifier": "com.MuryoKani.app"
 		},
 		"android": {
 			"adaptiveIcon": {
 				"foregroundImage": "./assets/images/icon.png",
 				"backgroundColor": "#161616"
 			},
-			"jsEngine": "hermes",
-			"softwareKeyboardLayoutMode": "pan"
+			"softwareKeyboardLayoutMode": "pan",
+			"package": "com.MuryoKani.app"
 		},
 		"web": {
 			"bundler": "metro",
@@ -45,6 +46,7 @@
 		},
 		"experiments": {
 			"typedRoutes": true
-		}
+		},
+		"assetBundlePatterns": ["./assets/**/*"]
 	}
 }

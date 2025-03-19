@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { TextInput, View, Text } from "react-native";
 import wanakana from "wanakana";
-import { PrimaryText, Radical } from "@/components/ThemedText";
+import { PrimaryText, Radical, Scroll } from "@/components/Themes";
 export function Review() {
 	const [text, setText] = useState("");
 

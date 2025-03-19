@@ -1,18 +1,75 @@
 import { Text, View, TouchableOpacity, ScrollView } from "react-native";
-import React from "react";
+import React, { useCallback, useState } from "react";
+import { useFocusEffect } from "expo-router";
 import { useRouter } from "expo-router";
 import { PrimaryText, SecondaryText, Scroll, Box } from "@/components/Themes";
 import LevelChart from "@/components/LevelChart";
+import { useSQLiteContext, openDatabaseAsync } from "expo-sqlite";
+
 export default function Home() {
-	const Lessons = 5;
-	const Reviews = 10;
 	const router = useRouter();
-	const stageData = { bronze: 2.5, silver: 2.5, locked: 2.5 };
+	const db = useSQLiteContext();
+	const [data, setData] = useState({
+		level: 1,
+		lessons: 10,
+		reviews: 0,
+		upcoming: 0,
+		bronze: 0,
+		silver: 0,
+		gold: 0,
+		platinum: 0,
+		diamond: 0,
+		passed: 0,
+		radicals: 0,
+		kanji: 0,
+	});
+	useFocusEffect(
+		useCallback(() => {
+			(async () => {
+				try {
+					const res = await db.getAllAsync(
+						`
+						SELECT
+							MAX(level) AS level,
+							COUNT(CASE WHEN stage = 0 THEN 1 END) AS lessons,
+							COUNT(CASE WHEN next_review <= datetime('now') THEN 1 END) AS reviews,
+							COUNT(CASE WHEN next_review BETWEEN datetime('now') AND datetime('now', '+24 hours') THEN 1 END) AS upcoming,
+							COUNT(CASE WHEN stage > 0 AND stage <= 4 THEN 1 END) AS bronze,
+							COUNT(CASE WHEN stage > 4 AND stage <= 6 THEN 1 END) AS silver,
+							COUNT(CASE WHEN stage > 6 AND stage <= 7 THEN 1 END) AS gold,
+							COUNT(CASE WHEN stage > 7 AND stage <= 8 THEN 1 END) AS platinum,
+							COUNT(CASE WHEN stage > 8 AND stage <= 9 THEN 1 END) AS diamond,
+							COUNT(CASE WHEN passed = 1 AND level = (SELECT MAX(level) FROM progress) THEN 1 END) AS passed,
+							(SELECT COUNT(CASE WHEN level = (SELECT MAX(level) FROM progress) THEN 1 END) FROM radicals) AS radicals,
+							(SELECT COUNT(CASE WHEN level = (SELECT MAX(level) FROM progress) THEN 1 END) FROM kanji) AS kanji
+						FROM progress;
+						`
+					);
+					setData(res[0]);
+					// console.log("Tables in DB:", res);
+				} catch (error) {
+					console.error("DB Query Error:", error);
+				}
+			})();
+		}, [db])
+	);
+
+	const stageData = {
+		learning: data.bronze,
+		passed: data.passed,
+		locked: 2.5,
+	};
+
 	return (
 		<Scroll>
 			<View className='flex flex-row gap-5 '>
-				<PrimaryText>Level 1</PrimaryText>
-				<PrimaryText>95.6%</PrimaryText>
+				<PrimaryText>Level {data.level}</PrimaryText>
+				<PrimaryText>
+					{Number(
+						(data.passed * 100) / (data.radicals + data.kanji * 0.9)
+					).toFixed(2)}
+					%
+				</PrimaryText>
 			</View>
 			<Box className='flex-col gap-1'>
 				<SecondaryText>Available</SecondaryText>
@@ -21,15 +78,15 @@ export default function Home() {
 						Lessons
 					</PrimaryText>
 					<Text className='text-black bg-white rounded-full self-center px-2'>
-						{Lessons == 0 && "Done!"}
-						{Lessons > 0 && Lessons}
+						{data.lessons == 0 && "Done!"}
+						{data.lessons > 0 && data.lessons}
 					</Text>
 				</View>
 				<View className='mt-5'></View>
 				<SecondaryText>
-					{Lessons == 0 &&
+					{data.lessons == 0 &&
 						"You've completed all your lessons! Keep doing your reviews to unlock more lessons."}
-					{Lessons > 0 && (
+					{data.lessons > 0 && (
 						<TouchableOpacity
 							onPress={() => router.push("/lessons")}
 							activeOpacity={0.8}
@@ -47,15 +104,15 @@ export default function Home() {
 						Reviews
 					</PrimaryText>
 					<Text className='text-black bg-white rounded-full self-center px-2'>
-						{Reviews == 0 && "None!"}
-						{Reviews > 0 && Reviews}
+						{data.reviews == 0 && "None!"}
+						{data.reviews > 0 && data.reviews}
 					</Text>
 				</View>
 				<View className='mt-5'></View>
 				<SecondaryText>
-					{Reviews == 0 &&
-						"You've completed all your reviews for now! You have 23 reviews upcoming in the next 24 hours."}
-					{Reviews > 0 && (
+					{data.reviews == 0 &&
+						`You've completed all your reviews for now! You have ${data.upcoming} reviews upcoming in the next 24 hours.`}
+					{data.reviews > 0 && (
 						<TouchableOpacity
 							onPress={() => router.push("/reviews")}
 							activeOpacity={0.8}
@@ -69,11 +126,15 @@ export default function Home() {
 
 			<View className='flex-row flex-wrap -mx-1 -my-1'>
 				{[
-					{ name: "Bronze", color: "#8C6239" },
-					{ name: "Silver", color: "#A6A6A6" },
-					{ name: "Gold", color: "#D4AF37" },
-					{ name: "Platinum", color: "#4A90E2" },
-					{ name: "Diamond", color: "#8E44AD" },
+					{ name: "Bronze", color: "#8C6239", count: data.bronze },
+					{ name: "Silver", color: "#A6A6A6", count: data.silver },
+					{ name: "Gold", color: "#D4AF37", count: data.gold },
+					{
+						name: "Platinum",
+						color: "#4A90E2",
+						count: data.platinum,
+					},
+					{ name: "Diamond", color: "#8E44AD", count: data.diamond },
 				].map((item, index) => (
 					<TouchableOpacity
 						key={index}
@@ -88,7 +149,7 @@ export default function Home() {
 								{item.name}
 							</PrimaryText>
 							<PrimaryText className='text-4xl font-semibold'>
-								0
+								{item.count}
 							</PrimaryText>
 						</View>
 					</TouchableOpacity>
@@ -118,13 +179,13 @@ export default function Home() {
 				</View>
 				<View className='flex flex-row justify-between mt-5'>
 					<View className='flex flex-row gap-2 items-center'>
-						<View className='bg-blue-400 h-3 w-3 rounded-full'></View>
+						<View className='bg-white h-3 w-3 rounded-full'></View>
 						<PrimaryText className='text-sm '>
 							In progress
 						</PrimaryText>
 					</View>
 					<View className='flex flex-row gap-2 items-center'>
-						<View className='bg-green-400 h-3 w-3 rounded-full'></View>
+						<View className='bg-yellow-400 h-3 w-3 rounded-full'></View>
 						<PrimaryText className='text-sm '>Passed</PrimaryText>
 					</View>
 					<View className='flex flex-row gap-2 items-center'>

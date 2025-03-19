@@ -1,8 +1,8 @@
 import { View } from "react-native";
 
 const stageColors = {
-	bronze: "#60A5FA",
-	silver: "#4ADE80",
+	learning: "#ffffff",
+	passed: "#facc15",
 	locked: "#F87171",
 };
 
