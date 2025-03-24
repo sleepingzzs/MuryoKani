@@ -17,7 +17,7 @@ export default function RootLayout() {
 			await SplashScreen.hideAsync();
 		})();
 	}, [db]);
-
+	if (!db) return <View className='flex-1 bg-bg'></View>;
 	return (
 		<Suspense fallback={<View className='flex-1 bg-bg'></View>}>
 			<SQLiteProvider databaseName='muryokani.db' useSuspense>
@@ -25,7 +25,7 @@ export default function RootLayout() {
 					style={{ flex: 1, backgroundColor: "#161616" }}
 					edges={["bottom"]}
 				>
-					<View className='flex-1 bg-[#161616]'>
+					<View className='flex-1 bg-bg'>
 						<Stack
 							screenOptions={{
 								headerShown: false,

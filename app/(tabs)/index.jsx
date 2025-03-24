@@ -1,7 +1,6 @@
 import { Text, View, TouchableOpacity, ScrollView } from "react-native";
 import React, { useCallback, useState } from "react";
-import { useFocusEffect } from "expo-router";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { PrimaryText, SecondaryText, Scroll, Box } from "@/components/Themes";
 import LevelChart from "@/components/LevelChart";
 import { useSQLiteContext, openDatabaseAsync } from "expo-sqlite";
@@ -85,8 +84,12 @@ export default function Home() {
 				<View className='mt-5'></View>
 				<SecondaryText>
 					{data.lessons == 0 &&
+						data.reviews == 0 &&
 						"You've completed all your lessons! Keep doing your reviews to unlock more lessons."}
-					{data.lessons > 0 && (
+					{data.lessons == 0 &&
+						data.reviews > 0 &&
+						"Complete your reviews to unlock more lessons."}
+					{data.lessons > 0 && data.reviews == 0 && (
 						<TouchableOpacity
 							onPress={() => router.push("/lessons")}
 							activeOpacity={0.8}

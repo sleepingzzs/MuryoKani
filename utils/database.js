@@ -7,7 +7,7 @@ export const loadDB = async () => {
 	const dbUri = Asset.fromModule(dbAsset).uri;
 	const dbFilePath = `${FileSystem.documentDirectory}SQLite/${dbName}`;
 	const fileInfo = await FileSystem.getInfoAsync(dbFilePath);
-	console.log(fileInfo);
+	// console.log(fileInfo);
 	/**
 	 * THIS CONDITION IS ONLY REMOVED IN DEBUGGING ENVIRONMENT
 	 */
